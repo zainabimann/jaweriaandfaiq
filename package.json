@@ -2,7 +2,7 @@
   "name": "jaweriaandfaiq",
   "version": "1.0.0",
   "private": true,
-  "description": "Jaweria & Faiq Walima wedding invitation",
+  "description": "Jaweria & Faiq wedding invitations (Walima and Barat)",
   "scripts": {
     "build": "node -e \"console.log('Static site — no build step required')\"",
     "start": "npx serve -l 3000"
