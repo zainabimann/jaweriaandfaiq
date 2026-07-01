@@ -134,6 +134,76 @@
       text-shadow: 0 1px 16px rgba(255, 255, 255, 0.9);
     }
 
+    .intro-skip {
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 101;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      border: none;
+      background: none;
+      color: var(--accent-dark);
+      cursor: pointer;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .intro-skip:hover {
+      opacity: 0.75;
+      transform: translateX(-50%) translateY(-2px);
+    }
+
+    .intro-skip-icon {
+      display: flex;
+      animation: bounceDown 1.6s ease-in-out infinite;
+    }
+
+    .chevron-icon {
+      width: 14px;
+      height: 14px;
+      display: block;
+    }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+      text-decoration: none;
+      color: var(--accent-dark);
+      opacity: 0.85;
+      transition: opacity 0.4s ease;
+    }
+
+    .scroll-hint.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .scroll-hint-text {
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .scroll-hint-icon {
+      display: flex;
+      animation: bounceDown 1.6s ease-in-out infinite;
+    }
+
+    @keyframes bounceDown {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(6px); }
+    }
+
     /* Hero */
     .hero {
       min-height: 100vh;
@@ -418,6 +488,12 @@
       text-decoration: underline;
     }
 
+    .rsvp-phones {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
     /* Footer */
     footer {
       text-align: center;
@@ -470,6 +546,10 @@
         display: none !important;
       }
 
+      .intro-skip {
+        display: none !important;
+      }
+
       .hero-divider,
       .hero-invite,
       .couple-names,
@@ -513,6 +593,14 @@
       <p class="intro-verse-text">"And We created you in pairs."</p>
       <p class="intro-verse-ref">— Surah An-Naba (78:8)</p>
     </div>
+    <button type="button" class="intro-skip" id="introSkip" aria-label="Skip to invitation">
+      <span class="intro-skip-icon" aria-hidden="true">
+        <svg class="chevron-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"/>
+          <polyline points="6 4 12 10 18 4"/>
+        </svg>
+      </span>
+    </button>
   </div>
 
   <!-- Hero -->
@@ -531,6 +619,15 @@
         Join us as we celebrate this blessed union and seek Allah's mercy and guidance for the newlyweds.
       </p>
     </div>
+    <a href="#countdown" class="scroll-hint" id="scrollHint" aria-label="Scroll for more">
+      <span class="scroll-hint-text">Scroll for more</span>
+      <span class="scroll-hint-icon" aria-hidden="true">
+        <svg class="chevron-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"/>
+          <polyline points="6 4 12 10 18 4"/>
+        </svg>
+      </span>
+    </a>
   </header>
 
   <!-- Countdown -->
@@ -648,47 +745,84 @@
       var intro = document.getElementById("intro");
       var introNames = document.getElementById("introNames");
       var introVerse = document.getElementById("introVerse");
+      var introSkip = document.getElementById("introSkip");
       var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      var timers = [];
 
-      function finishIntro() {
+      function schedule(fn, delay) {
+        timers.push(setTimeout(fn, delay));
+      }
+
+      function finishIntro(immediate) {
+        timers.forEach(clearTimeout);
+        timers = [];
         document.body.classList.remove("intro-active");
-        if (intro) {
-          intro.remove();
+        if (!intro) {
+          return;
         }
+        if (immediate) {
+          intro.remove();
+          return;
+        }
+        intro.classList.add("done");
+      }
+
+      if (introSkip) {
+        introSkip.addEventListener("click", function () {
+          finishIntro(true);
+        });
       }
 
       if (intro && !reducedMotion) {
-        setTimeout(function () {
+        schedule(function () {
           introNames.classList.add("active");
         }, 300);
 
-        setTimeout(function () {
+        schedule(function () {
           introNames.classList.remove("active");
           introVerse.classList.add("active");
         }, 3400);
 
-        setTimeout(function () {
+        schedule(function () {
           introVerse.classList.remove("active");
         }, 6500);
 
-        setTimeout(function () {
-          intro.classList.add("done");
-          document.body.classList.remove("intro-active");
+        schedule(function () {
+          finishIntro(false);
         }, 7600);
 
         intro.addEventListener("transitionend", function (e) {
           if (e.target === intro && intro.classList.contains("done")) {
-            finishIntro();
+            intro.remove();
           }
         });
 
-        setTimeout(function () {
+        schedule(function () {
           if (intro && intro.parentNode) {
-            finishIntro();
+            intro.remove();
           }
         }, 9600);
       } else {
-        finishIntro();
+        finishIntro(true);
+      }
+    })();
+
+    (function () {
+      var scrollHint = document.getElementById("scrollHint");
+
+      function updateScrollHint() {
+        if (!scrollHint) {
+          return;
+        }
+        scrollHint.classList.toggle("hidden", window.scrollY > 80);
+      }
+
+      if (scrollHint) {
+        scrollHint.addEventListener("click", function () {
+          scrollHint.classList.add("hidden");
+        });
+        window.addEventListener("scroll", updateScrollHint, { passive: true });
+        updateScrollHint();
       }
     })();
 
